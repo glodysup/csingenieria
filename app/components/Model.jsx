@@ -4,15 +4,16 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { useControls } from 'leva';
 
 
+
 export default function Model(){
    
-   const mesh = useRef()
+   const mesh = useRef() //Malla que permite la manipulación del objeto 3D, se usa con el hook: useRef() para referenciar al mesh del objeto en el DOM
    const {nodes} = useGLTF("/medias/torrus.glb")
-   const {viewport} = useThree();
+   const {viewport} = useThree(); // Para ajustar el tamaño dependiendo del ancho de pantalla
 
 
 
-   useFrame(() => { 
+   useFrame(() => {  // Funcion que se ejecuta cada frame de la app
           mesh.current.rotation.x += 0.02           
    })
 
@@ -27,7 +28,9 @@ export default function Model(){
 
 
     return(
-    <group scale={(viewport.width/3.5)}>
+
+        
+    <group scale={(viewport.width/3.5)}>        
         <Text fontSize={0.4} font='fonts/PPNeueMontreal-Bold.otf' position={[0,0,-.5]}>
             CSIngenieria SPA
         </Text>
