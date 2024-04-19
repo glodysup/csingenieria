@@ -6,7 +6,7 @@ import { useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Environment } from "@react-three/drei";
 
-const Scene = dynamic(() => import("../components/ScrollEffect"), {
+const ScrollEffect = dynamic(() => import("../components/ScrollEffect"), {
   //Importación asincrona
   ssr: false,
 });
@@ -40,7 +40,7 @@ export default function EfectoScroll() {
             position: [2.3, 1.5, 2.3],
           }}
         >
-          <Scene />
+          <ScrollEffect />
         </Canvas>
       </main>
     </>

@@ -4,150 +4,168 @@ Command: npx gltfjsx@6.2.16 public/medias/WawaOffice.glb
 */
 "use client";
 
-import React, { useLayoutEffect, useRef } from 'react'
-import { useGLTF, useScroll } from '@react-three/drei'
-import gsap from "gsap"
-import { useFrame } from '@react-three/fiber';
+import React, { useLayoutEffect, useRef } from "react";
+import { useGLTF, useScroll } from "@react-three/drei";
+import gsap from "gsap";
+import { useFrame } from "@react-three/fiber";
 
 export const FLOOR_HEIGHT = 2.3;
 export const NB_FLOORS = 3;
 
-
 export function Office(props) {
-  const { nodes, materials } = useGLTF('./medias/WawaOffice.glb')
+  const { nodes, materials } = useGLTF("./medias/WawaOffice.glb");
 
-const ref = useRef();
-const tl = useRef();
-const libraryRef = useRef();
-const atticRef = useRef();
+  // Variables que almacena la linea de tiempo de GSAP, y devuelve objeto con una propiedad current. (referencia al DOM)
+  const ref = useRef(); //Referencia al grupo principal
+  const tl = useRef(); //TimeLine
+  const libraryRef = useRef();
+  const atticRef = useRef();
 
-const scroll = useScroll()
+  const scroll = useScroll(); // Hook que retorna la posición actual del desplazamiento
 
-useFrame(() => {
-    tl.current.seek(scroll.offset*tl.current.duration())
-})
+  //En cada frame se accede a la propiedad current, y se encuentra una posición de la animación basada en la posición actual del desplazamiento.
+  useFrame(() => {
+    //scroll.offset = Posición actual del desplazamiento
+    //tl.current.duration = Linea del tiempo de GSAP almacenada en tl.
+    //seek() = Función de la linea de tiempo que busca una posición especifica en la posición basada en la posición actual del desplazamiento y la duración total de la animación.
+    tl.current.seek(scroll.offset * tl.current.duration());
+  });
 
-useLayoutEffect(() =>{
-    tl.current = gsap.timeline();
+  useLayoutEffect(() => {
+    // Hook que se ejecuta de manera sincrona. justo después de que React haya realizado las actualizaciones en el DOM y antes de que el navegador repinte la pantalla.
+
+    tl.current = gsap.timeline(); //crea una nueva línea de tiempo de animación.
 
     //VERTICAL ANIMATION
     tl.current.to(
-        ref.current.position,
-        {
-            duration:2,
-            y:-FLOOR_HEIGHT*(NB_FLOORS-1),
-        },
-        0)
+      //Se refiere a la línea de tiempo de GSAP. to(): Este método de GSAP se utiliza para animar propiedades de un objeto a un valor específico. En este caso, se está animando la posición del elemento.
 
-        //OFFICE ROTATION
+      ref.current.position, //Se refiere a la posición actual del elemento que se encuentra almacenada en la referencia mutable ref.
+      {
+        duration: 1,
+        y: -FLOOR_HEIGHT * (NB_FLOORS - 1),
+      },
+      0 //Segundo de inicio de la animación
+    );
 
-        tl.current.to(
-            ref.current.rotation,
-            {
-                duration:1, x:0, y: Math.PI/6, z:0},
-                0
-            )
-        tl.current.to(
-            ref.current.rotation,
-            {
-                duration:1, x:0, y: -Math.PI / 6, z:0},
-                1           
-        )
+    //OFFICE ROTATION
+    tl.current.to(
+      ref.current.rotation,
+      {
+        duration: 1,
+        x: 0,
+        y: Math.PI / 6,
+        z: 0,
+      },
+      0
+    );
 
-        //OFFICE MOVEMENT
-        tl.current.to(
-            ref.current.position,
-            {
-                duration: 1,
-                x: -1,
-                z:2,
-            },
-            0
-        )
-        tl.current.to(
-            ref.current.position,
-            {
-                duration: 1,
-                x:1,
-                z:2,
-            },
-            1
-        )
-         
+    tl.current.to(
+      ref.current.rotation,
+      {
+        duration: 1,
+        x: 0,
+        y: -Math.PI / 6,
+        z: 0,
+      },
+      1
+    );
 
+    //OFFICE MOVEMENT
+    tl.current.to(
+      ref.current.position,
+      {
+        duration: 1,
+        x: -1,
+        z: 2,
+      },
+      0
+    );
+    tl.current.to(
+      ref.current.position,
+      {
+        duration: 1,
+        x: 1,
+        z: 2,
+      },
+      1
+    );
 
-        // LIBRARY FLOOR
-        tl.current.from(
-            libraryRef.current.position,
-            {
-                duration:0.5,
-                x:-2,
-            },
-            0.5
-        )    
-        tl.current.from(
-            libraryRef.current.rotation,
-            {
-                duration:0.5,
-                y: -Math.PI/2,
-            },
-            0
-        )
+    // LIBRARY FLOOR
+    tl.current.from(
+      //Se utiliza para animar propiedades de un objeto desde un valor específico hasta su valor actual.
+      libraryRef.current.position,
+      {
+        duration: 0.5,
+        x: -2,
+      },
+      0.5
+    );
+    tl.current.from(
+      libraryRef.current.rotation,
+      {
+        duration: 0.5,
+        y: -Math.PI / 2,
+      },
+      0
+    );
 
-        // ATTIC
-        tl.current.from(
-            atticRef.current.position,
-            {
-                duration:1.5,
-                y:2,
-            },
-            0
-        )
+    // ATTIC
+    tl.current.from(
+      atticRef.current.position,
+      {
+        duration: 1.5,
+        y: 2,
+      },
+      0
+    );
 
-        tl.current.from(
-            atticRef.current.rotation,
-            {
-                duration:0.5,
-                y:Math.PI/2,
-            },
-            1
-        )    
+    tl.current.from(
+      atticRef.current.rotation,
+      {
+        duration: 0.5,
+        y: Math.PI / 2,
+      },
+      1
+    );
 
-
-
-        tl.current.from(
-            atticRef.current.position,
-            {
-                duration:0.5,
-                z:-2,
-            },
-            1.5
-        )
-
-
-    },[]
-    )
+    tl.current.from(
+      atticRef.current.position,
+      {
+        duration: 0.5,
+        z: -2,
+      },
+      1.5
+    );
+  }, []);
 
   return (
-    <group {...props} dispose={null} ref={ref}
-    position={[0.5, -1,-1]}
-    rotation={[0, -Math.PI/3,0]}
+    <group
+      {...props}
+      dispose={null}
+      ref={ref}
+      position={[0.5, -1, -1]}
+      rotation={[0, -Math.PI / 3, 0]}
     >
-      <mesh geometry={nodes['01_office'].geometry} material={materials['01']}/>
-      <group position={[0, 2.11, -2.23]}> 
+      <mesh geometry={nodes["01_office"].geometry} material={materials["01"]} />
+      <group position={[0, 2.11, -2.23]}>
         <group ref={libraryRef}>
-            <mesh geometry={nodes['02_library'].geometry} material={materials['02']}  />
+          <mesh
+            geometry={nodes["02_library"].geometry}
+            material={materials["02"]}
+          />
         </group>
-      
       </group>
-      <group position={[-1.97, 4.227, -2.199]} >
+      <group position={[-1.97, 4.227, -2.199]}>
         <group ref={atticRef}>
-             <mesh geometry={nodes['03_attic'].geometry} material={materials['03']} />
+          <mesh
+            geometry={nodes["03_attic"].geometry}
+            material={materials["03"]}
+          />
         </group>
-      
       </group>
     </group>
-  )
+  );
 }
 
-useGLTF.preload('./medias/WawaOffice.glb')
+useGLTF.preload("./medias/WawaOffice.glb");
