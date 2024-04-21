@@ -10,6 +10,7 @@ import {
 } from "@react-three/drei";
 import { Camping } from "./Camping";
 import { Building } from "./Building";
+import { Harnero } from "./Harnero";
 import { degToRad, lerp } from "three/src/math/MathUtils";
 import { Color } from "three";
 import { useEffect, useRef } from "react";
@@ -39,6 +40,7 @@ export const Experience = () => {
     controls.current.dolly(-22);
     controls.current.smoothTime = 1.6;
     controls.current.dolly(22, true);
+    controls.current.enableZoom = false;
     setTimeout(() => {
       setCurrentPage("Propuesta1");
     }, 1200);
@@ -124,7 +126,7 @@ export const Experience = () => {
       </Text>
 
       <group rotation-y={degToRad(-25)} position-x={3}>
-        <Camping scale={0.6} html />
+        <Camping scale={0.8} html />
         <mesh ref={meshFitCameraStore} visible={false}>
           <boxGeometry args={[2, 1, 2]} />
           <meshBasicMaterial color="red" transparent opacity={0.5} />
