@@ -198,7 +198,7 @@ export function Camping({ html, ...props }) {
               position-x={1.2}
               position-z={1.2}
               position-y={-0.1}
-              title={"TAMBOR AGLOMERADO"}
+              title={"HARNERO"}
               description={"Ingeniería, diseño, reparaciones, repuestos."}
               price={"129.99"}
               bgColor={"bg-yellow-500"}
@@ -1140,7 +1140,7 @@ export function Camping({ html, ...props }) {
               position-y={-0.2}
               position-z={0.25}
               rotation-x={-degToRad(20)}
-              title={"HARNERO"}
+              title={"TAMBOR AGLOMERADO"}
               description={
                 "Ingeniería, diseño, reparaciones, repuestos, e insumos"
               }
