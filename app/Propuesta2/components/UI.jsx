@@ -36,7 +36,7 @@ export const UI = () => {
             HARNERO
           </button>
           <button className="text-white hover:text-blue-500 font-medium py-2 px-4 rounded">
-            CAJS VIBRADORA
+            CAJA VIBRADORA
           </button>
           <button className="text-white hover:text-blue-500 font-medium py-2 px-4 rounded">
             TAMBOR AGLOMERADOR
