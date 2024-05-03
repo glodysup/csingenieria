@@ -7,9 +7,14 @@ import {
   MeshReflectorMaterial,
   RenderTexture,
   useFont,
+  PresentationControls,
 } from "@react-three/drei";
 import { Camping } from "./Camping";
 import { Building } from "./Building";
+import { Harnero } from "./Harnero";
+import { HarneroCollada } from "./HarneroCollada";
+import { HarneroOptimizado } from "./HarneroOptimizado";
+import { LOGO3D } from "./LOGO3D";
 
 import { degToRad, lerp } from "three/src/math/MathUtils";
 import { Color } from "three";
@@ -40,7 +45,9 @@ export const Experience = () => {
     controls.current.dolly(-22);
     controls.current.smoothTime = 1.6;
     controls.current.dolly(22, true);
-    controls.current.enableZoom = false;
+
+    controls.current.OrbitControls = false;
+
     setTimeout(() => {
       setCurrentPage("Propuesta1");
     }, 1200);
@@ -70,6 +77,7 @@ export const Experience = () => {
   return (
     <>
       <CameraControls ref={controls} />
+
       <mesh ref={meshFitCameraHome} position-rotateZ={0.5} visible={false}>
         <boxGeometry args={[10, 2, 2]} />
         <meshBasicMaterial color="orange" transparent opacity={0.5} />
@@ -96,7 +104,7 @@ export const Experience = () => {
             <Environment preset="sunset" />
             <Float floatIntensity={4} rotationIntensity={5}>
               <Camping
-                scale={1.6}
+                scale={1.3}
                 rotation-y={-degToRad(25)}
                 rotation-x={degToRad(40)}
                 position-x={-1}
@@ -126,7 +134,7 @@ export const Experience = () => {
       </Text>
 
       <group rotation-y={degToRad(-25)} position-x={3}>
-        <Camping scale={0.8} html />
+        <Camping scale={0.7} html />
         <mesh ref={meshFitCameraStore} visible={false}>
           <boxGeometry args={[2, 1, 2]} />
           <meshBasicMaterial color="red" transparent opacity={0.5} />

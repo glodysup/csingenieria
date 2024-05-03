@@ -12,8 +12,6 @@ export default function Propuesta1() {
     <>
       <main className="relative h-screen">
         <Canvas shadows camera={{ position: [0, 0, 8], fov: 42 }}>
-          <OrbitControls enabled={false} />
-
           <color attach="background" args={["#171720"]} />
           <fog attach="fog" args={["#171720", 10, 30]} />
 
