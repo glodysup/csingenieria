@@ -96,17 +96,6 @@ function disposeModel(mesh) {
   });
 }
 
-const handlePointerMove = throttle((event) => {
-  pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
-  pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
-  raycaster.setFromCamera(pointer, camera);
-}, 100); // Actualiza cada 100ms
-
-const raycaster = new THREE.Raycaster();
-const pointer = new THREE.Vector2();
-
-let camera;
-
 export const Experience = () => {
   const [slide] = useAtom(slideAtom);
   const lastSlide = useRef(0);
@@ -120,6 +109,17 @@ export const Experience = () => {
   const [selectedObjectName, setSelectedObjectName] = useState("");
 
   useEffect(() => {
+    const handlePointerMove = throttle((event) => {
+      pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+      pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      raycaster.setFromCamera(pointer, camera);
+    }, 100); // Actualiza cada 100ms
+
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
+
+    let camera;
+
     window.addEventListener("pointermove", handlePointerMove);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.outputColorSpace = THREE.SRGBColorSpace;
