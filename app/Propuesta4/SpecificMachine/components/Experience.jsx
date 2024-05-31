@@ -5,7 +5,6 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import * as THREE from "three";
 import { slideAtom } from "./UI";
-import { Ground } from "./Ground";
 import { useAtom } from "jotai";
 import { throttle } from "lodash";
 
