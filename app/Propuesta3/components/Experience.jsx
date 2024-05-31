@@ -4,7 +4,6 @@ import React, { useRef, useEffect } from "react";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import * as THREE from "three";
-import { ScrollControls } from "@react-three/drei";
 import { slideAtom } from "./UI";
 import { useAtom } from "jotai";
 
@@ -38,7 +37,38 @@ export const scenes = [
   },
 ];
 
-function loadModel() {}
+const loader = new GLTFLoader().setPath("/medias/");
+
+function loadModel(scene, modelInfo, onLoaded) {
+  loader.load(
+    modelInfo.path,
+    (gltf) => {
+      const mesh = gltf.scene;
+      mesh.traverse((child) => {
+        if (child.isMesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+          child.material = new THREE.MeshPhongMaterial({
+            //color: modelInfo.mainColor,
+            shininess: 100,
+            specular: 0xffffff,
+            metalness: 0.9,
+            roughness: 0.9,
+          });
+        }
+      });
+
+      mesh.position.set(0, 0, 0);
+      mesh.scale.set(modelInfo.scale, modelInfo.scale, modelInfo.scale);
+      scene.add(mesh);
+      if (onLoaded) onLoaded(mesh);
+    },
+    undefined,
+    (error) => {
+      console.error("An error happened loading the model:", error);
+    }
+  );
+}
 
 export const Experience = () => {
   const [slide] = useAtom(slideAtom);
@@ -119,48 +149,15 @@ export const Experience = () => {
 
     /*********************************HASTA AQUÍ ES SOLO SETUP DE CÁMARA, LUCES, GROUND ********************/
 
-    const loader = new GLTFLoader().setPath("/medias/");
-
-    loader.load(
-      scenes[0].path,
-      (gltf) => {
-        console.log("loading model");
-        const mesh = gltf.scene;
-
-        mesh.traverse((child) => {
-          //Este método permite iterar sobre todos los descendientes de un objeto, incluyendo el propio objeto, de manera recursiva.
-          if (child.isMesh) {
-            child.castShadow = true;
-            child.receiveShadow = true;
-            const newMaterial = new THREE.MeshPhongMaterial({
-              //Sacar de esta función recursiva
-              // color: 0x555555, // Color gris
-              shininess: 100, // Brillo
-              specular: 0xffffff, // Color especular
-              metalness: 0.9,
-              roughness: 0.9,
-            });
-            child.material = newMaterial;
-          }
-        });
-        mesh.position.set(0, 0, 0);
-        const scale = scenes[0].scale;
-        mesh.scale.set(scale, scale, scale);
-
-        //mesh.rotateY(20);
-
-        scene.add(mesh);
-        harneroMeshRef.current = mesh; // Almacenar la referencia al objeto
-
-        document.getElementById("progress-container").style.display = "none";
-      },
-      (xhr) => {
-        console.log(`loading ${(xhr.loaded / xhr.total) * 100}%`);
-      },
-      (error) => {
-        console.error(error);
+    loadModel(sceneRef.current, scenes[0], (mesh) => {
+      if (harneroMeshRef.current) {
+        sceneRef.current.remove(harneroMeshRef.current); // Limpieza previa
+        // Dispose materials and geometry as needed
       }
-    );
+      harneroMeshRef.current = mesh;
+    });
+
+    const loader = new GLTFLoader().setPath("/medias/");
 
     loader.load(
       "LETRASTEXTURIZADAS.glb",
@@ -210,9 +207,14 @@ export const Experience = () => {
 
     return () => {
       //Retorno de useEffect
-      try {
-        mountRef.current.removeChild(renderer.domElement); //mointRef referencia al elemento HTML Canvas que utiliza "renderer"
-      } catch (e) {}
+      if (harneroMeshRef.current) {
+        sceneRef.current.remove(harneroMeshRef.current); // Limpieza final
+        // Dispose materials and geometry as needed
+      }
+      if (mountRef.current) {
+        mountRef.current.removeChild(renderer.domElement);
+      }
+      renderer.dispose();
     };
   }, []); //Fin del useEffect
 
@@ -220,11 +222,9 @@ export const Experience = () => {
     if (lastSlide.current === slide) {
       return;
     }
-    //Desaparecer();
-    if (harneroMeshRef.current) {
-      //scene.remove(harneroMeshRef.current);
-      console.log("AQKIIIIIIIIIIIIIIIIIIIIIIIIII" + harneroMeshRef);
 
+    if (harneroMeshRef.current) {
+      //Animación de transición podría ir aquí
       sceneRef.current.remove(harneroMeshRef.current);
       harneroMeshRef.current = null;
 
@@ -234,48 +234,22 @@ export const Experience = () => {
     }
 
     const scene = sceneRef.current;
-    const loader = new GLTFLoader().setPath("/medias/");
 
-    loader.load(
-      scenes[slide].path,
-      (gltf) => {
-        console.log("loading model");
-        const mesh = gltf.scene;
+    //Hacer función que llame a loader.
 
-        mesh.traverse((child) => {
-          if (child.isMesh) {
-            child.castShadow = true;
-            child.receiveShadow = true;
-            child.material.roughness = 0.2; // Hace que la superficie sea más reflectante
-            child.material.metalness = 0.1; // Añade un poco de reflectancia metálica
-            child.material.shininess = 90;
-          }
-        });
-        mesh.position.set(0, 0, 0);
-        mesh.rotateY(0.7);
-
-        const scale = scenes[slide].scale;
-        mesh.scale.set(scale, scale, scale);
-
-        scene.add(mesh);
-        harneroMeshRef.current = mesh; // Almacenar la referencia al objeto
-        document.getElementById("progress-container").style.display = "none";
-      },
-      (xhr) => {
-        //xhr representa un objeto relacionado con la petición de XMLHttpRequest utilizada para cargar los recursos
-        console.log(`loading ${(xhr.loaded / xhr.total) * 100}%`); //Este callback se llama repetidamente durante la carga y es especialmente útil para informar al usuario sobre el progreso
-      },
-      (error) => {
-        console.error(error);
+    loadModel(sceneRef.current, scenes[slide], (mesh) => {
+      if (harneroMeshRef.current) {
+        sceneRef.current.remove(harneroMeshRef.current); // Limpieza previa
+        // Dispose materials and geometry as needed
       }
-    );
+      harneroMeshRef.current = mesh;
+    });
 
     lastSlide.current = slide;
 
     return () => {
       if (harneroMeshRef.current) {
         //scene.remove(harneroMeshRef.current);
-        console.log("AQKIIIIIIIIIIIIIIIIIIIIIIIIII" + harneroMeshRef);
 
         sceneRef.current.remove(harneroMeshRef.current);
         harneroMeshRef.current = null;
