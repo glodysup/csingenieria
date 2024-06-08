@@ -159,7 +159,7 @@ export const Experience = () => {
       1000
     );*/
 
-    camera.position.set(0, 3, 9);
+    camera.position.set(0, 3, 8);
     camera.layers.enable(1);
 
     const controls = new OrbitControls(camera, renderer.domElement);
@@ -190,6 +190,25 @@ export const Experience = () => {
     const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.5);
     directionalLight2.position.set(0, 0, -10);
     scene.add(directionalLight2);
+
+    const textureLoader = new THREE.TextureLoader();
+    const backgroundTexture = textureLoader.load("/medias/images/FondoCSI.jpg");
+    backgroundTexture.wrapS = THREE.ClampToEdgeWrapping;
+    backgroundTexture.wrapT = THREE.ClampToEdgeWrapping;
+
+    const backgroundMaterial = new THREE.MeshBasicMaterial({
+      map: backgroundTexture,
+      transparent: true,
+      opacity: 0.5,
+    });
+
+    const backgroundMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(30, 15),
+      backgroundMaterial
+    );
+
+    backgroundMesh.position.set(0, 6.5, -15);
+    scene.add(backgroundMesh);
 
     const groundGeometry = new THREE.PlaneGeometry(30, 30, 32, 32);
     groundGeometry.rotateX(-Math.PI / 2);
@@ -276,6 +295,8 @@ export const Experience = () => {
       }
 
       try {
+        renderer.autoClear = false;
+        renderer.clear();
         renderer.render(scene, camera);
       } catch (error) {
         console.error("Error during render:", error);
@@ -324,7 +345,7 @@ export const Experience = () => {
         setLastSelectedObject(object);
       });
 
-      highlightedObjects = newHighlighted;
+      highlightedObjects = new Set(newHighlighted);
     }
 
     function disposeModel(mesh) {

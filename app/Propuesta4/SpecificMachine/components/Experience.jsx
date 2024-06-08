@@ -219,7 +219,7 @@ export const Experience = () => {
     const loader = new GLTFLoader().setPath("/medias/");
 
     loader.load(
-      "LETRASTEXTURIZADAS.glb",
+      "HARNEROS_MANTENIBLES.glb",
       (gltf) => {
         console.log("loading model");
         const mesh = gltf.scene;
@@ -233,10 +233,10 @@ export const Experience = () => {
             child.material.shininess = 90;
           }
         });
-        mesh.position.set(-4.5, 1.8, 1);
+        mesh.position.set(-5.2, 2, 0.5);
         mesh.rotateY(0.7);
 
-        mesh.scale.set(0.4, 0.4, 0.4);
+        mesh.scale.set(0.3, 0.3, 0.3);
 
         scene.add(mesh);
 
