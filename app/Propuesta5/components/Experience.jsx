@@ -10,7 +10,7 @@ import { throttle } from "lodash";
 
 export const scenes = [
   {
-    path: "HarneroNor.glb",
+    path: "HarneroMain.glb",
     mainColor: "#f9c0ff",
     name: "Harnero Ensamblado",
     description: "Modelo CS01",
@@ -32,13 +32,13 @@ export const scenes = [
     SubCategories: 3,
   },
   {
-    path: "HarneroNor.glb",
+    path: "tamborOptimizado.glb",
     mainColor: "#ffdec0",
     name: "Harnero Hidro Escurridor",
     description: "Modelo CS03",
     price: 150000,
     range: 800,
-    scale: 0.3,
+    scale: 0.25,
     Category: "Caja vibradora",
     SubCategories: 5,
   },
@@ -169,7 +169,7 @@ export const Experience = () => {
     directionalLight2.position.set(0, 0, -10);
     scene.add(directionalLight2);
 
-    loadModel(sceneRef.current, scenes[0], { x: 0, y: 1, z: 0 }, (mesh) => {
+    loadModel(sceneRef.current, scenes[0], { x: 0, y: -0.5, z: 0 }, (mesh) => {
       if (harneroMeshRef.current) {
         sceneRef.current.remove(harneroMeshRef.current);
         disposeModel(harneroMeshRef.current);
@@ -177,7 +177,7 @@ export const Experience = () => {
       harneroMeshRef.current = mesh;
     });
 
-    loadModel(sceneRef.current, scenes[1], { x: 4.5, y: 1, z: 0 }, (mesh) => {
+    loadModel(sceneRef.current, scenes[1], { x: 4.5, y: -1, z: 0 }, (mesh) => {
       if (tamborAglomeradorMeshRef.current) {
         sceneRef.current.remove(tamborAglomeradorMeshRef.current);
         disposeModel(tamborAglomeradorMeshRef.current);
@@ -185,13 +185,18 @@ export const Experience = () => {
       tamborAglomeradorMeshRef.current = mesh;
     });
 
-    loadModel(sceneRef.current, scenes[2], { x: -4.5, y: 1, z: 0 }, (mesh) => {
-      if (cajaVibradoraMeshRef.current) {
-        sceneRef.current.remove(cajaVibradoraMeshRef.current);
-        disposeModel(cajaVibradoraMeshRef.current);
+    loadModel(
+      sceneRef.current,
+      scenes[2],
+      { x: -4.5, y: -0.5, z: 0 },
+      (mesh) => {
+        if (cajaVibradoraMeshRef.current) {
+          sceneRef.current.remove(cajaVibradoraMeshRef.current);
+          disposeModel(cajaVibradoraMeshRef.current);
+        }
+        cajaVibradoraMeshRef.current = mesh;
       }
-      cajaVibradoraMeshRef.current = mesh;
-    });
+    );
 
     let lastPointerMove = 0;
     const pointerMoveInterval = 100;
@@ -201,15 +206,15 @@ export const Experience = () => {
       requestAnimationFrame(animate);
 
       if (harneroMeshRef.current) {
-        harneroMeshRef.current.rotation.y += 0.005;
+        harneroMeshRef.current.rotation.y += 0.01;
       }
 
       if (tamborAglomeradorMeshRef.current) {
-        tamborAglomeradorMeshRef.current.rotation.y += 0.005;
+        tamborAglomeradorMeshRef.current.rotation.y += 0.01;
       }
 
       if (cajaVibradoraMeshRef.current) {
-        cajaVibradoraMeshRef.current.rotation.y += 0.005;
+        cajaVibradoraMeshRef.current.rotation.y += 0.01;
       }
 
       now = Date.now();
@@ -247,6 +252,9 @@ export const Experience = () => {
           } else {
             console.warn("Normal material is undefined for object:", obj);
           }
+          if (obj.userData.originalScale) {
+            obj.scale.copy(obj.userData.originalScale);
+          }
         }
       });
 
@@ -256,6 +264,14 @@ export const Experience = () => {
         if (object.userData.hoverMaterial) {
           object.material = object.userData.hoverMaterial;
         }
+
+        if (!object.userData.originalScale) {
+          object.userData.originalScale = object.scale.clone();
+        }
+        targetScale = object.userData.originalScale
+          .clone()
+          .multiplyScalar(scaleFactor);
+        object.scale.lerp(targetScale, lerpFactor);
 
         lastHighlightedObject = object;
       });
@@ -326,7 +342,7 @@ export const Experience = () => {
     <>
       <div className="fixed top-0 left-0 w-full h-full -z-10 overflow-hidden">
         <video
-          className="absolute w-auto min-w-full min-h-full max-w-none"
+          className="absolute top-1/2 left-1/2 w-auto min-w-full min-h-full transform -translate-x-1/2 -translate-y-1/2"
           autoPlay
           muted
           loop
@@ -335,6 +351,34 @@ export const Experience = () => {
         </video>
       </div>
       <div ref={mountRef} className="absolute top-0 left-0 w-full h-full"></div>
+      <div className="absolute bottom-0 w-full overflow-hidden leading-none -z-10">
+        <svg
+          viewBox="0 0 1200 300"
+          preserveAspectRatio="none"
+          className="relative block w-full h-full"
+        >
+          <defs>
+            <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+              <feDropShadow
+                dx="5"
+                dy="4"
+                stdDeviation="10"
+                floodColor="black"
+                floodOpacity="0.9"
+              />
+            </filter>
+          </defs>
+          <polygon
+            points="0,0 600,150 1200,0 1200,300 0,300"
+            fill="white"
+          ></polygon>
+          <polygon
+            points="0,0 600,150 1200,0"
+            fill="transparent"
+            style={{ filter: "url(#shadow)" }}
+          ></polygon>
+        </svg>
+      </div>
     </>
   );
 };
