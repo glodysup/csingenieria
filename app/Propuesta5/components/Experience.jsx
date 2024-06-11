@@ -7,10 +7,11 @@ import * as THREE from "three";
 import { slideAtom } from "./UI";
 import { useAtom } from "jotai";
 import { throttle } from "lodash";
+import { useTypewriter, Cursor } from "react-simple-typewriter";
 
 export const scenes = [
   {
-    path: "HarneroMain.glb",
+    path: "HarneroColor.glb",
     mainColor: "#f9c0ff",
     name: "Harnero Ensamblado",
     description: "Modelo CS01",
@@ -67,9 +68,9 @@ function loadModel(scene, modelInfo, position, onLoaded) {
       const mesh = gltf.scene;
       mesh.traverse((child) => {
         if (child.isMesh) {
-          child.castShadow = true;
-          child.receiveShadow = true;
-          child.material = normalMaterial.clone();
+          // child.castShadow = true;
+          //   child.receiveShadow = true;
+          // Utilizar el material del archivo GLTF
           child.userData.hoverMaterial = hoverMaterial.clone();
           child.userData.normalMaterial = child.material;
           child.userData.modelInfo = modelInfo;
@@ -106,6 +107,13 @@ export const Experience = () => {
   const [showOptions, setShowOptions] = useState(false);
   const [lastSelectedObject, setLastSelectedObject] = useState(null);
   const [selectedObjectName, setSelectedObjectName] = useState("");
+
+  const { text } = useTypewriter({
+    words: ["HARNERO", "TAMBOR AGLOMERADO", "CAJA VIBRADORA"],
+    loop: {},
+    typeSpeed: 120,
+    deleteSpeed: 80,
+  });
 
   useEffect(() => {
     let camera = new THREE.PerspectiveCamera(
@@ -177,26 +185,26 @@ export const Experience = () => {
       harneroMeshRef.current = mesh;
     });
 
-    loadModel(sceneRef.current, scenes[1], { x: 4.5, y: -1, z: 0 }, (mesh) => {
-      if (tamborAglomeradorMeshRef.current) {
-        sceneRef.current.remove(tamborAglomeradorMeshRef.current);
-        disposeModel(tamborAglomeradorMeshRef.current);
-      }
-      tamborAglomeradorMeshRef.current = mesh;
-    });
-
     loadModel(
       sceneRef.current,
-      scenes[2],
-      { x: -4.5, y: -0.5, z: 0 },
+      scenes[1],
+      { x: 4.5, y: -0.5, z: 0 },
       (mesh) => {
-        if (cajaVibradoraMeshRef.current) {
-          sceneRef.current.remove(cajaVibradoraMeshRef.current);
-          disposeModel(cajaVibradoraMeshRef.current);
+        if (tamborAglomeradorMeshRef.current) {
+          sceneRef.current.remove(tamborAglomeradorMeshRef.current);
+          disposeModel(tamborAglomeradorMeshRef.current);
         }
-        cajaVibradoraMeshRef.current = mesh;
+        tamborAglomeradorMeshRef.current = mesh;
       }
     );
+
+    loadModel(sceneRef.current, scenes[2], { x: -4.5, y: 0, z: 0 }, (mesh) => {
+      if (cajaVibradoraMeshRef.current) {
+        sceneRef.current.remove(cajaVibradoraMeshRef.current);
+        disposeModel(cajaVibradoraMeshRef.current);
+      }
+      cajaVibradoraMeshRef.current = mesh;
+    });
 
     let lastPointerMove = 0;
     const pointerMoveInterval = 100;
@@ -347,10 +355,11 @@ export const Experience = () => {
           muted
           loop
         >
-          <source src="/medias/videos/mainVideo2.mp4" type="video/mp4" />
+          <source src="/medias/videos/FondoPMov.mp4" type="video/mp4" />
         </video>
       </div>
       <div ref={mountRef} className="absolute top-0 left-0 w-full h-full"></div>
+
       <div className="absolute bottom-0 w-full overflow-hidden leading-none -z-10">
         <svg
           viewBox="0 0 1200 300"

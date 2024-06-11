@@ -1,5 +1,5 @@
 "use client";
-
+import { useTypewriter, Cursor } from "react-simple-typewriter";
 import { atom, useAtom } from "jotai";
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -11,6 +11,17 @@ export const slideAtom = atom(0);
 
 export const UI = () => {
   //const [currentPage, setCurrentPage] = useAtom(currentPageAtom);
+  const [text] = useTypewriter({
+    words: [
+      "AUMENTE SU CONFIABILIDAD",
+      "MEJOR DISEÑO",
+      "MEJOR RENDIMIENTO",
+      "REPUESTOS CS INGENIERÍA",
+    ],
+    loop: {},
+    typeSpeed: 40,
+    deleteSpeed: 20,
+  });
 
   const [slide, setSlide] = useAtom(slideAtom);
   const [displaySlide, setDisplaySlide] = useState(slide);
@@ -40,16 +51,8 @@ export const UI = () => {
         style={{ position: "absolute", top: 20, left: 20 }}
       />
 
-      <Image
-        src="/medias/images/carrito.png"
-        alt="Descripción de la imagen"
-        width={50}
-        height={50}
-        style={{ position: "absolute", top: 20, right: 20 }}
-      />
-
-      <header className="pointer-events-auto absolute top-0 left-1/2 transform -translate-x-1/2 w-full flex justify-center items-center py-4">
-        <div className="flex gap-4 relative">
+      <header className="pointer-events-auto absolute top-0 right-0 w-full flex justify-end items-center py-4 pr-5">
+        <div className="flex gap-1 relative">
           <div className="group">
             <button
               style={{
@@ -59,20 +62,33 @@ export const UI = () => {
               }}
               className="text-white hover:text-blue-500 font-medium py-2 px-4 rounded underline focus:outline-none"
             >
-              INICIO
+              Inicio
             </button>
           </div>
           <button className="text-white hover:text-blue-500 font-medium py-2 px-4 rounded">
-            CENTRO DE REPARACIONES
+            Centro de reparaciones
           </button>
           <button className="text-white hover:text-blue-500 font-medium py-2 px-4 rounded">
-            PRODUCTOS
+            Productos
           </button>
           <button className="text-white hover:text-blue-500 font-medium py-2 px-4 rounded">
-            CONTÁCTO
+            Contacto
           </button>
+          <Image
+            src="/medias/images/carrito.png"
+            alt="Descripción de la imagen"
+            width={50}
+            height={50}
+          />
         </div>
       </header>
+
+      <div className="absolute top-[15%] left-1/2 transform -translate-x-1/2 flex flex-col items-center justify-center z-50 font-montserrat text-white font-bold text-5xl text-center space-y-4">
+        <span className="font-extrabold text-5xl">
+          CENTRO DE CUSTOMIZACIÓN DE EQUIPOS
+        </span>
+        <span className="font-extrabold text-3xl">{text}</span>
+      </div>
     </div>
   );
 };
