@@ -82,13 +82,14 @@ export const UI = () => {
           />
         </div>
       </header>
-
-      <div className="absolute top-[15%] left-1/2 transform -translate-x-1/2 flex flex-col items-center justify-center z-50 font-montserrat text-white font-bold text-5xl text-center space-y-4">
+    </div>
+  );
+};
+/**
+ *  <div className="absolute top-[15%] left-1/2 transform -translate-x-1/2 flex flex-col items-center justify-center z-50 font-montserrat text-white font-bold text-5xl text-center space-y-4">
         <span className="font-extrabold text-5xl">
           CENTRO DE CUSTOMIZACIÓN DE EQUIPOS
         </span>
         <span className="font-extrabold text-3xl">{text}</span>
       </div>
-    </div>
-  );
-};
+ */

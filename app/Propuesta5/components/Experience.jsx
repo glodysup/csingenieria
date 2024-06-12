@@ -8,10 +8,12 @@ import { slideAtom } from "./UI";
 import { useAtom } from "jotai";
 import { throttle } from "lodash";
 import { useTypewriter, Cursor } from "react-simple-typewriter";
+//import { BufferGeometryUtils } from "../../utils/BufferGeometryUtils.js"; // Ajusta la ruta según la ubicación del archivo
+import * as BufferGeometryUtils from "../../utils/BufferGeometryUtils.js";
 
 export const scenes = [
   {
-    path: "HarneroColor.glb",
+    path: "HarneroMain3.glb",
     mainColor: "#f9c0ff",
     name: "Harnero Ensamblado",
     description: "Modelo CS01",
@@ -22,18 +24,18 @@ export const scenes = [
     SubCategories: 2,
   },
   {
-    path: "HarneroNor.glb",
+    path: "CajaMain.glb",
     mainColor: "#c0ffe1",
     name: "Harnero Nordberg",
     description: "Modelo CS02",
     price: 29740,
     range: 576,
-    scale: 0.3,
+    scale: 1.4,
     Category: "Tambor aglomerador",
     SubCategories: 3,
   },
   {
-    path: "tamborOptimizado.glb",
+    path: "tamborAmarillo.glb",
     mainColor: "#ffdec0",
     name: "Harnero Hidro Escurridor",
     description: "Modelo CS03",
@@ -62,36 +64,103 @@ const hoverMaterial = new THREE.MeshPhongMaterial({
 const loader = new GLTFLoader().setPath("/medias/");
 
 function loadModel(scene, modelInfo, position, onLoaded) {
+  let color = 0xffffff;
   loader.load(
     modelInfo.path,
     (gltf) => {
       const mesh = gltf.scene;
-      mesh.traverse((child) => {
+      /*  mesh.traverse((child) => {
         if (child.isMesh) {
           // child.castShadow = true;
           //   child.receiveShadow = true;
           // Utilizar el material del archivo GLTF
-          child.userData.hoverMaterial = hoverMaterial.clone();
-          child.userData.normalMaterial = child.material;
-          child.userData.modelInfo = modelInfo;
-          child.layers.set(1);
+          //color = child.material.color;
+
+          //  child.material = normalMaterial.clone();
+
+          //  child.material.color = color;
+
+          // child.userData.hoverMaterial = hoverMaterial.clone();
+          //child.userData.normalMaterial = child.material;
+
+          // child.userData.modelInfo = modelInfo;
+
+          //child.layers.set(1);
         }
       });
-      mesh.position.set(position.x, position.y, position.z);
-      mesh.scale.set(modelInfo.scale, modelInfo.scale, modelInfo.scale);
+      //  mesh.position.set(position.x, position.y, position.z);
+      // mesh.scale.set(modelInfo.scale, modelInfo.scale, modelInfo.scale);
 
       if (!mesh.userData.originalScale) {
         mesh.userData.originalScale = mesh.scale.clone();
-      }
+      }*/
 
-      scene.add(mesh);
-      if (onLoaded) onLoaded(mesh);
+      const combinedMesh = combineMeshes(mesh, color, position, modelInfo);
+      scene.add(combinedMesh);
+
+      if (onLoaded) onLoaded(combinedMesh);
     },
     undefined,
     (error) => {
       console.error("An error happened loading the model:", error);
     }
   );
+}
+
+function combineMeshes(mesh, color, position, modelInfo, onLoaded) {
+  const geometries = [];
+  const materials = [];
+  const materialMap = new Map();
+
+  mesh.traverse((child) => {
+    if (child.isMesh) {
+      // Clonar la geometría y aplicar la transformación del objeto original
+
+      const geometry = child.geometry.clone();
+      geometry.applyMatrix4(child.matrixWorld);
+
+      color = child.material.color;
+      child.userData.hoverMaterial = hoverMaterial.clone();
+      child.userData.normalMaterial = normalMaterial.clone();
+      child.material = normalMaterial.clone();
+      child.material.color = color;
+      //child.castShadow = true;
+      //child.receiveShadow = true;
+
+      // Buscar el material o agregarlo a la lista si no existe
+      let materialIndex = materialMap.get(child.material);
+      if (materialIndex === undefined) {
+        materialIndex = materials.length;
+        materialMap.set(child.material, materialIndex);
+        materials.push(child.material);
+      }
+
+      // Añadir el índice de material a los grupos de geometría
+      const groups = geometry.groups;
+      for (let i = 0; i < groups.length; i++) {
+        groups[i].materialIndex = materialIndex;
+      }
+
+      geometries.push(geometry);
+    }
+  });
+
+  if (geometries.length > 0) {
+    // Combinar geometrías en una sola
+    const mergedGeometry = BufferGeometryUtils.mergeGeometries(
+      geometries,
+      true
+    );
+
+    const combinedMesh = new THREE.Mesh(mergedGeometry, materials);
+
+    combinedMesh.position.set(position.x, position.y, position.z);
+    combinedMesh.scale.set(modelInfo.scale, modelInfo.scale, modelInfo.scale);
+
+    combinedMesh.layers.set(1);
+
+    return combinedMesh;
+  }
 }
 
 const raycaster = new THREE.Raycaster();
@@ -177,7 +246,7 @@ export const Experience = () => {
     directionalLight2.position.set(0, 0, -10);
     scene.add(directionalLight2);
 
-    loadModel(sceneRef.current, scenes[0], { x: 0, y: -0.5, z: 0 }, (mesh) => {
+    loadModel(sceneRef.current, scenes[0], { x: 0, y: -1, z: 0 }, (mesh) => {
       if (harneroMeshRef.current) {
         sceneRef.current.remove(harneroMeshRef.current);
         disposeModel(harneroMeshRef.current);
@@ -188,7 +257,7 @@ export const Experience = () => {
     loadModel(
       sceneRef.current,
       scenes[1],
-      { x: 4.5, y: -0.5, z: 0 },
+      { x: 4.5, y: -0.2, z: 0 },
       (mesh) => {
         if (tamborAglomeradorMeshRef.current) {
           sceneRef.current.remove(tamborAglomeradorMeshRef.current);
@@ -355,7 +424,7 @@ export const Experience = () => {
           muted
           loop
         >
-          <source src="/medias/videos/FondoPMov.mp4" type="video/mp4" />
+          <source src="/medias/videos/FondoP1.mp4" type="video/mp4" />
         </video>
       </div>
       <div ref={mountRef} className="absolute top-0 left-0 w-full h-full"></div>
