@@ -474,11 +474,11 @@ export const Experience = () => {
       >
         <p></p>
         <p className="mt-2 italic text-gray-500">
-          "Estos términos se utilizan solo para propósitos de identificación y
-          no representan afiliación con, o aprobación de Metso o FLSmidth/FLS.
+          Estos términos se utilizan solo para propósitos de identificación y no
+          representan afiliación con, o aprobación de Metso o FLSmidth/FLS.
           Todas las piezas son fabricadas por y para FLSmidth Inc. - Operaciones
           en Pekin y cuentan con su garantía; y no son fabricadas, adquiridas ni
-          garantizadas por el fabricante de equipo original."
+          garantizadas por el fabricante de equipo original.
         </p>
       </div>
     </>
