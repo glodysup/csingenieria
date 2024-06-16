@@ -74,12 +74,6 @@ export const UI = () => {
           <button className="text-white hover:text-blue-500 font-medium py-2 px-4 rounded">
             Contacto
           </button>
-          <Image
-            src="/medias/images/carrito.png"
-            alt="Descripción de la imagen"
-            width={50}
-            height={50}
-          />
         </div>
       </header>
     </div>
@@ -92,4 +86,11 @@ export const UI = () => {
         </span>
         <span className="font-extrabold text-3xl">{text}</span>
       </div>
+
+       <Image
+            src="/medias/images/carrito.png"
+            alt="Descripción de la imagen"
+            width={50}
+            height={50}
+          />
  */

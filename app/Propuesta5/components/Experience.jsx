@@ -4,11 +4,8 @@ import React, { useRef, useEffect, useState } from "react";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import * as THREE from "three";
-import { slideAtom } from "./UI";
-import { useAtom } from "jotai";
 import { throttle } from "lodash";
 import { useTypewriter, Cursor } from "react-simple-typewriter";
-//import { BufferGeometryUtils } from "../../utils/BufferGeometryUtils.js"; // Ajusta la ruta según la ubicación del archivo
 import * as BufferGeometryUtils from "../../utils/BufferGeometryUtils.js";
 
 export const scenes = [
@@ -20,8 +17,7 @@ export const scenes = [
     price: 72000,
     range: 660,
     scale: 0.3,
-    Category: "Harnero",
-    SubCategories: 2,
+    url: "/harnero",
   },
   {
     path: "CajaMain.glb",
@@ -31,8 +27,7 @@ export const scenes = [
     price: 29740,
     range: 576,
     scale: 1.4,
-    Category: "Tambor aglomerador",
-    SubCategories: 3,
+    url: "/caja",
   },
   {
     path: "tamborAmarillo.glb",
@@ -42,8 +37,7 @@ export const scenes = [
     price: 150000,
     range: 800,
     scale: 0.25,
-    Category: "Caja vibradora",
-    SubCategories: 5,
+    url: "/tambor",
   },
 ];
 
@@ -62,6 +56,9 @@ const hoverMaterial = new THREE.MeshPhongMaterial({
 });
 
 const loader = new GLTFLoader().setPath("/medias/");
+const raycaster = new THREE.Raycaster();
+raycaster.layers.set(1);
+const pointer = new THREE.Vector2();
 
 function loadModel(scene, modelInfo, position, onLoaded) {
   let color = 0xffffff;
@@ -69,33 +66,8 @@ function loadModel(scene, modelInfo, position, onLoaded) {
     modelInfo.path,
     (gltf) => {
       const mesh = gltf.scene;
-      /*  mesh.traverse((child) => {
-        if (child.isMesh) {
-          // child.castShadow = true;
-          //   child.receiveShadow = true;
-          // Utilizar el material del archivo GLTF
-          //color = child.material.color;
-
-          //  child.material = normalMaterial.clone();
-
-          //  child.material.color = color;
-
-          // child.userData.hoverMaterial = hoverMaterial.clone();
-          //child.userData.normalMaterial = child.material;
-
-          // child.userData.modelInfo = modelInfo;
-
-          //child.layers.set(1);
-        }
-      });
-      //  mesh.position.set(position.x, position.y, position.z);
-      // mesh.scale.set(modelInfo.scale, modelInfo.scale, modelInfo.scale);
-
-      if (!mesh.userData.originalScale) {
-        mesh.userData.originalScale = mesh.scale.clone();
-      }*/
-
       const combinedMesh = combineMeshes(mesh, color, position, modelInfo);
+      combinedMesh.userData.url = modelInfo.url; // Añadir la URL al userData del mesh
       scene.add(combinedMesh);
 
       if (onLoaded) onLoaded(combinedMesh);
@@ -107,15 +79,13 @@ function loadModel(scene, modelInfo, position, onLoaded) {
   );
 }
 
-function combineMeshes(mesh, color, position, modelInfo, onLoaded) {
+function combineMeshes(mesh, color, position, modelInfo) {
   const geometries = [];
   const materials = [];
   const materialMap = new Map();
 
   mesh.traverse((child) => {
     if (child.isMesh) {
-      // Clonar la geometría y aplicar la transformación del objeto original
-
       const geometry = child.geometry.clone();
       geometry.applyMatrix4(child.matrixWorld);
 
@@ -124,10 +94,9 @@ function combineMeshes(mesh, color, position, modelInfo, onLoaded) {
       child.userData.normalMaterial = normalMaterial.clone();
       child.material = normalMaterial.clone();
       child.material.color = color;
-      //child.castShadow = true;
-      //child.receiveShadow = true;
+      child.castShadow = true;
+      child.receiveShadow = true;
 
-      // Buscar el material o agregarlo a la lista si no existe
       let materialIndex = materialMap.get(child.material);
       if (materialIndex === undefined) {
         materialIndex = materials.length;
@@ -135,7 +104,6 @@ function combineMeshes(mesh, color, position, modelInfo, onLoaded) {
         materials.push(child.material);
       }
 
-      // Añadir el índice de material a los grupos de geometría
       const groups = geometry.groups;
       for (let i = 0; i < groups.length; i++) {
         groups[i].materialIndex = materialIndex;
@@ -146,25 +114,21 @@ function combineMeshes(mesh, color, position, modelInfo, onLoaded) {
   });
 
   if (geometries.length > 0) {
-    // Combinar geometrías en una sola
     const mergedGeometry = BufferGeometryUtils.mergeGeometries(
       geometries,
       true
     );
-
     const combinedMesh = new THREE.Mesh(mergedGeometry, materials);
 
     combinedMesh.position.set(position.x, position.y, position.z);
     combinedMesh.scale.set(modelInfo.scale, modelInfo.scale, modelInfo.scale);
-
+    combinedMesh.castShadow = true;
+    combinedMesh.receiveShadow = true;
     combinedMesh.layers.set(1);
 
     return combinedMesh;
   }
 }
-
-const raycaster = new THREE.Raycaster();
-const pointer = new THREE.Vector2();
 
 export const Experience = () => {
   const mountRef = useRef(null);
@@ -173,9 +137,6 @@ export const Experience = () => {
   const cajaVibradoraMeshRef = useRef(null);
   const controlRef = useRef(null);
   const sceneRef = useRef(null);
-  const [showOptions, setShowOptions] = useState(false);
-  const [lastSelectedObject, setLastSelectedObject] = useState(null);
-  const [selectedObjectName, setSelectedObjectName] = useState("");
 
   const { text } = useTypewriter({
     words: ["HARNERO", "TAMBOR AGLOMERADO", "CAJA VIBRADORA"],
@@ -195,8 +156,7 @@ export const Experience = () => {
     const handlePointerMove = throttle((event) => {
       pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
       pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
-      raycaster.setFromCamera(pointer, camera);
-    }, 100); // Actualiza cada 100ms
+    }, 200); // Actualiza cada 100ms
 
     window.addEventListener("pointermove", handlePointerMove);
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -236,15 +196,34 @@ export const Experience = () => {
     spotLight.position.set(0, 25, 0);
     spotLight.castShadow = true;
     spotLight.shadow.bias = -0.0001;
+    spotLight.shadow.mapSize.width = 2048;
+    spotLight.shadow.mapSize.height = 2048;
     scene.add(spotLight);
 
     const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
     directionalLight.position.set(8, -1, 10);
+    /* directionalLight.castShadow = true;
+    directionalLight.shadow.mapSize.width = 2048;
+    directionalLight.shadow.mapSize.height = 2048;*/
     scene.add(directionalLight);
 
     const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.5);
-    directionalLight2.position.set(0, 0, -10);
+    directionalLight2.position.set(-8, 0, 10);
+    /* directionalLight2.castShadow = true;
+    directionalLight2.shadow.mapSize.width = 2048;
+    directionalLight2.shadow.mapSize.height = 2048;*/
     scene.add(directionalLight2);
+
+    const groundGeometry = new THREE.PlaneGeometry(25, 5, 32, 32);
+    groundGeometry.rotateX(-Math.PI / 2);
+    const groundMaterial = new THREE.ShadowMaterial({
+      opacity: 0.3, // Ajusta este valor para cambiar el tono de la sombra
+    });
+
+    const groundMesh = new THREE.Mesh(groundGeometry, groundMaterial);
+    groundMesh.receiveShadow = true;
+    groundMesh.position.set(0, -1.5, 0);
+    scene.add(groundMesh);
 
     loadModel(sceneRef.current, scenes[0], { x: 0, y: -1, z: 0 }, (mesh) => {
       if (harneroMeshRef.current) {
@@ -276,7 +255,7 @@ export const Experience = () => {
     });
 
     let lastPointerMove = 0;
-    const pointerMoveInterval = 100;
+    const pointerMoveInterval = 200;
     let now = Date.now();
 
     function animate() {
@@ -318,7 +297,6 @@ export const Experience = () => {
     const lerpFactor = 0.3;
 
     function updateHighlightedObjects() {
-      raycaster.layers.set(1);
       intersects = raycaster.intersectObjects(scene.children, true);
       newHighlighted = new Set(intersects.map((intersect) => intersect.object));
 
@@ -339,7 +317,7 @@ export const Experience = () => {
 
       intersects.forEach(({ object }) => {
         if (object.userData.hoverMaterial) {
-          object.material = object.userData.hoverMaterial;
+          object.material = object.userData.hoverMaterial.clone();
         }
 
         if (!object.userData.originalScale) {
@@ -353,13 +331,18 @@ export const Experience = () => {
         lastHighlightedObject = object;
       });
 
-      if (lastHighlightedObject) {
-        setShowOptions(true);
-        setLastSelectedObject(lastHighlightedObject);
-        setSelectedObjectName(lastHighlightedObject.name);
-      }
+      highlightedObjects = new Set(newHighlighted);
+    }
 
-      highlightedObjects = newHighlighted;
+    function handleMouseClick(event) {
+      raycaster.setFromCamera(pointer, camera);
+      const intersects = raycaster.intersectObjects(scene.children, true);
+      if (intersects.length > 0) {
+        const firstIntersect = intersects[0].object;
+        if (firstIntersect.userData.url) {
+          window.location.href = firstIntersect.userData.url;
+        }
+      }
     }
 
     function disposeModel(mesh) {
@@ -378,13 +361,7 @@ export const Experience = () => {
     window.addEventListener("pointermove", handlePointerMove, {
       passive: true,
     });
-
-    window.addEventListener("click", (event) => {
-      const intersects = raycaster.intersectObjects(scene.children, true);
-      if (intersects.length === 0) {
-        setShowOptions(false);
-      }
-    });
+    window.addEventListener("click", handleMouseClick);
 
     animate();
 
@@ -412,6 +389,7 @@ export const Experience = () => {
       }
       renderer.dispose();
       window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("click", handleMouseClick);
     };
   }, []);
 
@@ -431,7 +409,7 @@ export const Experience = () => {
 
       <div className="absolute bottom-0 w-full overflow-hidden leading-none -z-10">
         <svg
-          viewBox="0 0 1200 300"
+          viewBox="0 0 1200 265"
           preserveAspectRatio="none"
           className="relative block w-full h-full"
         >
@@ -447,7 +425,7 @@ export const Experience = () => {
             </filter>
           </defs>
           <polygon
-            points="0,0 600,150 1200,0 1200,300 0,300"
+            points="0,0 600,75 1200,0 1200,300 0,300"
             fill="white"
           ></polygon>
           <polygon
@@ -456,6 +434,27 @@ export const Experience = () => {
             style={{ filter: "url(#shadow)" }}
           ></polygon>
         </svg>
+      </div>
+
+      <div className="h-screen flex flex-col justify-end">
+        <div className="w-full py-8 absolute bottom-0 z-10">
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center font-montserrat text-gray-800">
+              <div className="flex flex-col items-center justify-center pr-20">
+                <h2 className="text-xl font-bold">TAMBOR AGLOMERADOR</h2>
+                <p className="">100% alivio tensiones - 100% mecanizados</p>
+              </div>
+              <div className="flex flex-col items-center justify-center">
+                <h2 className="text-xl font-bold">HARNERO</h2>
+                <p className="">Mantenibles multimarca</p>
+              </div>
+              <div className="flex flex-col items-center justify-center pl-20">
+                <h2 className="text-xl font-bold">SISTEMA MOTRIZ</h2>
+                <p className="">Sistema motriz de alto desempeño</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </>
   );
