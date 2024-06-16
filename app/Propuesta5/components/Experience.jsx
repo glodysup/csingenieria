@@ -10,24 +10,24 @@ import * as BufferGeometryUtils from "../../utils/BufferGeometryUtils.js";
 
 export const scenes = [
   {
-    path: "HarneroMain3.glb",
+    path: "HarneroMain2.glb",
     mainColor: "#f9c0ff",
     name: "Harnero Ensamblado",
     description: "Modelo CS01",
     price: 72000,
     range: 660,
     scale: 0.3,
-    url: "/harnero",
+    url: "/Propuesta5/Harnero",
   },
   {
-    path: "CajaMain.glb",
+    path: "CajaVibradora.glb",
     mainColor: "#c0ffe1",
     name: "Harnero Nordberg",
     description: "Modelo CS02",
     price: 29740,
     range: 576,
     scale: 1.4,
-    url: "/caja",
+    url: "/Propuesta5/Caja",
   },
   {
     path: "tamborAmarillo.glb",
@@ -37,7 +37,7 @@ export const scenes = [
     price: 150000,
     range: 800,
     scale: 0.25,
-    url: "/tambor",
+    url: "/Propuesta5/Tambor",
   },
 ];
 
@@ -217,7 +217,7 @@ export const Experience = () => {
     const groundGeometry = new THREE.PlaneGeometry(25, 5, 32, 32);
     groundGeometry.rotateX(-Math.PI / 2);
     const groundMaterial = new THREE.ShadowMaterial({
-      opacity: 0.3, // Ajusta este valor para cambiar el tono de la sombra
+      opacity: 0.35, // Ajusta este valor para cambiar el tono de la sombra
     });
 
     const groundMesh = new THREE.Mesh(groundGeometry, groundMaterial);
@@ -260,6 +260,7 @@ export const Experience = () => {
 
     function animate() {
       requestAnimationFrame(animate);
+      controls.update();
 
       if (harneroMeshRef.current) {
         harneroMeshRef.current.rotation.y += 0.01;
