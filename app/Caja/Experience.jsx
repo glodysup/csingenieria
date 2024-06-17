@@ -243,7 +243,7 @@ export const Experience = () => {
     groundMesh.position.set(0, -1.5, 0);
     scene.add(groundMesh);
 
-    loadModel(sceneRef.current, scenes[1], { x: 0, y: -1, z: 0 }, (mesh) => {
+    loadModel(sceneRef.current, scenes[1], { x: 0, y: 0, z: 0 }, (mesh) => {
       if (harneroMeshRef.current) {
         sceneRef.current.remove(harneroMeshRef.current);
         disposeModel(harneroMeshRef.current);

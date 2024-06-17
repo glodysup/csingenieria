@@ -233,20 +233,15 @@ export const Experience = () => {
       harneroMeshRef.current = mesh;
     });
 
-    loadModel(
-      sceneRef.current,
-      scenes[1],
-      { x: 4.5, y: -0.2, z: 0 },
-      (mesh) => {
-        if (tamborAglomeradorMeshRef.current) {
-          sceneRef.current.remove(tamborAglomeradorMeshRef.current);
-          disposeModel(tamborAglomeradorMeshRef.current);
-        }
-        tamborAglomeradorMeshRef.current = mesh;
+    loadModel(sceneRef.current, scenes[1], { x: 4, y: -0.2, z: 0 }, (mesh) => {
+      if (tamborAglomeradorMeshRef.current) {
+        sceneRef.current.remove(tamborAglomeradorMeshRef.current);
+        disposeModel(tamborAglomeradorMeshRef.current);
       }
-    );
+      tamborAglomeradorMeshRef.current = mesh;
+    });
 
-    loadModel(sceneRef.current, scenes[2], { x: -4.5, y: 0, z: 0 }, (mesh) => {
+    loadModel(sceneRef.current, scenes[2], { x: -4, y: 0, z: 0 }, (mesh) => {
       if (cajaVibradoraMeshRef.current) {
         sceneRef.current.remove(cajaVibradoraMeshRef.current);
         disposeModel(cajaVibradoraMeshRef.current);
@@ -442,17 +437,17 @@ export const Experience = () => {
         <div className="w-full py-8 absolute bottom-0 z-10">
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center font-montserrat text-gray-800">
-              <div className="flex flex-col items-center justify-center pr-20">
+              <div className="flex flex-col items-center justify-center">
                 <h2 className="text-xl font-bold">TAMBOR AGLOMERADOR</h2>
-                <p className="">100% alivio tensiones - 100% mecanizados</p>
+                <p>100% alivio tensiones - 100% mecanizados</p>
               </div>
               <div className="flex flex-col items-center justify-center">
                 <h2 className="text-xl font-bold">HARNERO</h2>
-                <p className="">Mantenibles multimarca</p>
+                <p>Mantenibles multimarca</p>
               </div>
-              <div className="flex flex-col items-center justify-center pl-20">
+              <div className="flex flex-col items-center justify-center ">
                 <h2 className="text-xl font-bold">SISTEMA MOTRIZ</h2>
-                <p className="">Sistema motriz de alto desempeño</p>
+                <p>Sistema motriz de alto desempeño</p>
               </div>
             </div>
           </div>
