@@ -55,6 +55,15 @@ const hoverMaterial = new THREE.MeshPhongMaterial({
   specular: 0xffffff,
 });
 
+// Material para cuando el objeto está seleccionado
+const selectedMaterial = new THREE.MeshPhongMaterial({
+  color: 0xffffff,
+  shininess: 100,
+  specular: 0xffffff,
+  emissive: 0xff0000,
+  emissiveIntensity: 0.1,
+});
+
 const loader = new GLTFLoader().setPath("/medias/");
 const raycaster = new THREE.Raycaster();
 raycaster.layers.set(1);
@@ -73,6 +82,7 @@ function loadModel(scene, modelInfo, position, onLoaded) {
           child.material = normalMaterial.clone();
           child.userData.hoverMaterial = hoverMaterial.clone();
           child.userData.normalMaterial = child.material;
+          child.userData.selectedMaterial = selectedMaterial.clone();
           child.userData.modelInfo = modelInfo;
           child.material.color = color;
           child.layers.set(1);
@@ -91,57 +101,6 @@ function loadModel(scene, modelInfo, position, onLoaded) {
   );
 }
 
-function combineMeshes(mesh, color, position, modelInfo) {
-  const geometries = [];
-  const materials = [];
-  const materialMap = new Map();
-
-  mesh.traverse((child) => {
-    if (child.isMesh) {
-      const geometry = child.geometry.clone();
-      geometry.applyMatrix4(child.matrixWorld);
-
-      color = child.material.color;
-      child.userData.hoverMaterial = hoverMaterial.clone();
-      child.userData.normalMaterial = normalMaterial.clone();
-      child.material = normalMaterial.clone();
-      child.material.color = color;
-      child.castShadow = true;
-      child.receiveShadow = true;
-
-      let materialIndex = materialMap.get(child.material);
-      if (materialIndex === undefined) {
-        materialIndex = materials.length;
-        materialMap.set(child.material, materialIndex);
-        materials.push(child.material);
-      }
-
-      const groups = geometry.groups;
-      for (let i = 0; i < groups.length; i++) {
-        groups[i].materialIndex = materialIndex;
-      }
-
-      geometries.push(geometry);
-    }
-  });
-
-  if (geometries.length > 0) {
-    const mergedGeometry = BufferGeometryUtils.mergeGeometries(
-      geometries,
-      true
-    );
-    const combinedMesh = new THREE.Mesh(mergedGeometry, materials);
-
-    combinedMesh.position.set(position.x, position.y, position.z);
-    combinedMesh.scale.set(modelInfo.scale, modelInfo.scale, modelInfo.scale);
-    combinedMesh.castShadow = true;
-    combinedMesh.receiveShadow = true;
-    combinedMesh.layers.set(1);
-
-    return combinedMesh;
-  }
-}
-
 export const Experience = () => {
   const mountRef = useRef(null);
   const harneroMeshRef = useRef(null);
@@ -150,8 +109,23 @@ export const Experience = () => {
   const controlRef = useRef(null);
   const sceneRef = useRef(null);
   const [showOptions, setShowOptions] = useState(false);
-  const [lastSelectedObject, setLastSelectedObject] = useState(null);
+  const [lastSelectedObject, setLastSelectedObject] = useState({});
   const [selectedObjectName, setSelectedObjectName] = useState("");
+  const [pressedObjectName, setPressedObjectName] = useState(
+    "Seleccione un componente..."
+  );
+
+  useEffect(() => {
+    if (lastSelectedObject) {
+      console.log("lastSelectedObject.name : " + lastSelectedObject.name);
+    } else {
+      console.log("lastSelectedObject is null");
+    }
+  }, [lastSelectedObject]);
+
+  let nameLastSelectedObject;
+  let objLastSelectedObject;
+  let firstIntersect;
 
   const { text } = useTypewriter({
     words: ["HARNERO", "TAMBOR AGLOMERADO", "CAJA VIBRADORA"],
@@ -159,6 +133,14 @@ export const Experience = () => {
     typeSpeed: 120,
     deleteSpeed: 80,
   });
+
+  useEffect(() => {
+    if (lastSelectedObject) {
+      console.log(
+        "USE Effect lastSelectedObject.name : " + lastSelectedObject.name
+      );
+    }
+  }, [lastSelectedObject]);
 
   useEffect(() => {
     let camera = new THREE.PerspectiveCamera(
@@ -174,6 +156,7 @@ export const Experience = () => {
     }, 100); // Actualiza cada 100ms
 
     window.addEventListener("pointermove", handlePointerMove);
+
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.outputColorSpace = THREE.SRGBColorSpace;
 
@@ -220,16 +203,10 @@ export const Experience = () => {
 
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
     directionalLight.position.set(8, 3, -3);
-    /*   directionalLight.castShadow = true;
-    directionalLight.shadow.mapSize.width = 2048;
-    directionalLight.shadow.mapSize.height = 2048;*/
     scene.add(directionalLight);
 
     const directionalLight2 = new THREE.DirectionalLight(0xffffff, 1);
     directionalLight2.position.set(-8, 5, 5);
-    /*   directionalLight2.castShadow = true;
-    directionalLight2.shadow.mapSize.width = 2048;
-    directionalLight2.shadow.mapSize.height = 2048;*/
     scene.add(directionalLight2);
 
     const groundGeometry = new THREE.PlaneGeometry(25, 5, 32, 32);
@@ -260,7 +237,6 @@ export const Experience = () => {
       controls.update();
       now = Date.now();
       if (now - lastPointerMove > pointerMoveInterval) {
-        raycaster.setFromCamera(pointer, camera);
         updateHighlightedObjects();
         lastPointerMove = now;
       }
@@ -281,62 +257,109 @@ export const Experience = () => {
     const scaleFactor = 1.25;
     const lerpFactor = 0.3;
 
+    let highlightedObject;
+
     function updateHighlightedObjects() {
+      raycaster.setFromCamera(pointer, camera);
       intersects = raycaster.intersectObjects(scene.children, true);
-      newHighlighted = new Set(intersects.map((intersect) => intersect.object));
 
-      highlightedObjects.forEach((obj) => {
-        if (!newHighlighted.has(obj)) {
-          if (obj.userData.normalMaterial) {
-            obj.material = obj.userData.normalMaterial;
-          } else {
-            console.warn("Normal material is undefined for object:", obj);
+      // Reset previous highlighted object to its normal material if it's not the selected one
+      if (
+        highlightedObject &&
+        highlightedObject.userData &&
+        highlightedObject.name
+      ) {
+        if (
+          highlightedObject.userData.normalMaterial &&
+          highlightedObject.name
+        ) {
+          if (
+            !nameLastSelectedObject ||
+            highlightedObject.name !== nameLastSelectedObject
+          ) {
+            highlightedObject.material =
+              highlightedObject.userData.normalMaterial;
           }
-          if (obj.userData.originalScale) {
-            obj.scale.copy(obj.userData.originalScale);
-          }
+        } else {
+          console.warn(
+            "Normal material is undefined for object:",
+            highlightedObject
+          );
         }
-      });
-
-      let lastHighlightedObject = null;
-
-      intersects.forEach(({ object }) => {
-        if (object.userData.hoverMaterial) {
-          object.material = object.userData.hoverMaterial.clone();
-        }
-
-        /*  if (!object.userData.originalScale) {
-          object.userData.originalScale = object.scale.clone();
-        }
-        targetScale = object.userData.originalScale
-          .clone()
-          .multiplyScalar(scaleFactor);
-        object.scale.lerp(targetScale, lerpFactor);*/
-
-        lastHighlightedObject = object;
-      });
-
-      if (lastHighlightedObject) {
-        setShowOptions(true);
-        setLastSelectedObject(lastHighlightedObject);
-        setSelectedObjectName(lastHighlightedObject.name);
       }
 
-      highlightedObjects = new Set(newHighlighted);
+      if (intersects.length > 0) {
+        firstIntersect = intersects[0].object;
+        if (
+          firstIntersect.userData &&
+          firstIntersect.name &&
+          (!nameLastSelectedObject ||
+            firstIntersect.name !== nameLastSelectedObject)
+        ) {
+          firstIntersect.material =
+            firstIntersect.userData.hoverMaterial.clone();
+        }
+        setShowOptions(true);
+        setSelectedObjectName(firstIntersect.name);
+      }
+
+      highlightedObject = firstIntersect;
     }
 
     function handleMouseClick(event) {
-      //raycaster.setFromCamera(pointer, camera);
-      // const intersects = raycaster.intersectObjects(scene.children, true);
+      raycaster.setFromCamera(pointer, camera);
+      intersects = raycaster.intersectObjects(scene.children, true);
+
       if (intersects.length > 0) {
-        console.log("VARIABLE: " + intersects);
-        const firstIntersect = intersects[0].object;
-        setShowOptions(true);
-        setLastSelectedObject(firstIntersect);
-        setSelectedObjectName(firstIntersect.userData.modelInfo.name);
+        const clickObject = intersects[0].object;
+        console.log("SE HIZO CLICK EN OBJETO: " + clickObject.name);
+        console.log(
+          "lastSelectedObject.name antes: " + lastSelectedObject.name
+        );
+
+        if (objLastSelectedObject && lastSelectedObject.userData) {
+          lastSelectedObject.material =
+            lastSelectedObject.userData.normalMaterial;
+          setPressedObjectName("Seleccione un componente");
+          objLastSelectedObject = null;
+          setShowOptions(false);
+          console.log("lastSelectedObject.name TRUE ");
+        }
+
+        clickObject.material = selectedMaterial.clone();
+        // setLastSelectedObject(clickObject.name);
+        nameLastSelectedObject = clickObject.name;
+        if (objLastSelectedObject) {
+          objLastSelectedObject.material =
+            objLastSelectedObject.userData.normalMaterial;
+          objLastSelectedObject = null;
+          setPressedObjectName("Seleccione un componente");
+
+          setPressedObjectName(clickObject.name);
+        } else {
+          objLastSelectedObject = clickObject;
+          setPressedObjectName(clickObject.name);
+        }
+
+        objLastSelectedObject = clickObject;
+        setPressedObjectName(clickObject.name);
+
+        console.log("LET lastSelectedObject.name : " + nameLastSelectedObject);
       } else {
+        console.log("lastSelectedObject.name FALSE ");
+        if (lastSelectedObject && lastSelectedObject.userData) {
+          lastSelectedObject.material =
+            lastSelectedObject.userData.normalMaterial;
+          //setLastSelectedObject({});
+          nameLastSelectedObject = "";
+        }
+        if (objLastSelectedObject) {
+          objLastSelectedObject.material =
+            objLastSelectedObject.userData.normalMaterial;
+        }
+        setPressedObjectName("Seleccione un componente");
+        objLastSelectedObject = null;
         setShowOptions(false);
-        console.log("VARIABLE: FALSE" + intersects);
       }
     }
 
@@ -439,7 +462,7 @@ export const Experience = () => {
           }}
           onClick={(e) => e.stopPropagation()} // Prevenir que el clic en el modal cierre el modal
         >
-          <h2 className="font-bold">{selectedObjectName}</h2>
+          <h2 className="font-bold">{pressedObjectName}</h2>
           <select className="pointer-events-auto py-2 px-4 bg-transparent border border-gray-600 rounded-full">
             <option>Modelo CSI-01</option>
             <option>Modelo CSI-02</option>
